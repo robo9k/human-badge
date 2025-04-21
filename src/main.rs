@@ -9,12 +9,15 @@ use cyw43_pio::{PioSpi, RM2_CLOCK_DIVIDER};
 use defmt::*;
 use embassy_executor::Spawner;
 use embassy_rp::peripherals::{DMA_CH0, PIO0};
-use embassy_rp::pio::{InterruptHandler, Pio};
+use embassy_rp::pio::{InterruptHandler as PioInterruptHandler, Pio};
 use embassy_rp::{bind_interrupts, gpio};
 use embassy_time::{Duration, Timer};
 use gpio::{Level, Output};
 use static_cell::StaticCell;
 use {defmt_rtt as _, panic_probe as _};
+use embassy_rp::i2c::{self, Config, InterruptHandler as I2cInterruptHandler};
+use embassy_rp::peripherals::I2C0;
+use embedded_hal_async::i2c::I2c;
 
 // Program metadata for `picotool info`.
 // This isn't needed, but it's recomended to have these minimal entries.
@@ -30,7 +33,8 @@ pub static PICOTOOL_ENTRIES: [embassy_rp::binary_info::EntryAddr; 4] = [
 ];
 
 bind_interrupts!(struct Irqs {
-    PIO0_IRQ_0 => InterruptHandler<PIO0>;
+    PIO0_IRQ_0 => PioInterruptHandler<PIO0>;
+    I2C0_IRQ => I2cInterruptHandler<I2C0>;
 });
 
 #[embassy_executor::task]
@@ -74,6 +78,25 @@ async fn main(spawner: Spawner) {
     control
         .set_power_management(cyw43::PowerManagementMode::PowerSave)
         .await;
+
+    // https://cdn.shopify.com/s/files/1/0174/1800/files/ppico_plus_2_w_pinout_diagram.pdf?v=1727346378
+    // https://cdn.shopify.com/s/files/1/0174/1800/files/Pimoroni_Pico_Plus_2_W_Schematic.pdf?v=1727350279
+    let sda = p.PIN_4;
+    let scl = p.PIN_5;
+
+    info!("set up i2c ");
+    let mut i2c = i2c::I2c::new_async(p.I2C0, scl, sda, Irqs, Config::default());
+
+    const BME280_REGISTER_CHIPID: u8 = 0xd0;
+    let buffer: [u8; 1] = [BME280_REGISTER_CHIPID];
+    let mut output_buffer: [u8; 1] = [0];
+    const DEFAULT_ADDRESS: u8 = 0x76;
+    i2c.write_read(DEFAULT_ADDRESS, &buffer, &mut output_buffer)
+       .await
+       .unwrap();
+
+    let bme280_chip_id = output_buffer[0];
+    info!("BME280 chip id: {:02x}", bme280_chip_id);
 
     let delay = Duration::from_secs(1);
     loop {
