@@ -17,7 +17,6 @@ use static_cell::StaticCell;
 use {defmt_rtt as _, panic_probe as _};
 use embassy_rp::i2c::{self, Config, InterruptHandler as I2cInterruptHandler};
 use embassy_rp::peripherals::I2C0;
-use embedded_hal_async::i2c::I2c;
 
 // Program metadata for `picotool info`.
 // This isn't needed, but it's recomended to have these minimal entries.
@@ -85,18 +84,12 @@ async fn main(spawner: Spawner) {
     let scl = p.PIN_5;
 
     info!("set up i2c ");
-    let mut i2c = i2c::I2c::new_async(p.I2C0, scl, sda, Irqs, Config::default());
+    let i2c = i2c::I2c::new_async(p.I2C0, scl, sda, Irqs, Config::default());
 
-    const BME280_REGISTER_CHIPID: u8 = 0xd0;
-    let buffer: [u8; 1] = [BME280_REGISTER_CHIPID];
-    let mut output_buffer: [u8; 1] = [0];
     const DEFAULT_ADDRESS: u8 = 0x76;
-    i2c.write_read(DEFAULT_ADDRESS, &buffer, &mut output_buffer)
-       .await
-       .unwrap();
 
-    let bme280_chip_id = output_buffer[0];
-    info!("BME280 chip id: {:02x}", bme280_chip_id);
+    let bme = bme280::Bme280::new_with_address(i2c, DEFAULT_ADDRESS).await.unwrap();
+    info!("initialized BME280 sensor: {}", bme);
 
     let delay = Duration::from_secs(1);
     loop {
