@@ -91,6 +91,10 @@ async fn main(spawner: Spawner) {
     let bme = bme280::Bme280::new_with_address(i2c, DEFAULT_ADDRESS).await.unwrap();
     info!("initialized BME280 sensor: {}", bme);
 
+    // RP2040 would be embassy_rp::flash::blocking_unique_id(), see https://github.com/embassy-rs/embassy/blob/572e788b2e878436bde527ad66cf561775cebc66/examples/rp/src/bin/flash.rs#L34
+    let board_id = embassy_rp::otp::get_chipid().unwrap();
+    info!("board id: {=u64:#X}", board_id);
+
     let delay = Duration::from_secs(1);
     loop {
         info!("led on!");
