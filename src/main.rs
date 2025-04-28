@@ -91,9 +91,6 @@ async fn main(spawner: Spawner) {
     let mut bme = bme280::Bme280::new_with_address(i2c, DEFAULT_ADDRESS).await.unwrap();
     info!("initialized BME280 sensor: {}", bme);
 
-    bme.reset().await.unwrap();
-    info!("reset BME280 sensor");
-
     let bme_control = bme.control().await.unwrap();
     info!("BME280 control before: {}", bme_control);
 
