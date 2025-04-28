@@ -111,6 +111,9 @@ async fn main(spawner: Spawner) {
     let bme_config = bme.config().await.unwrap();
     info!("BME280 config: {}", bme_config);
 
+    let bme = bme.calibrate().await.unwrap();
+    info!("calibrated BME280 sensor: {}", bme);
+
     // RP2040 would be embassy_rp::flash::blocking_unique_id(), see https://github.com/embassy-rs/embassy/blob/572e788b2e878436bde527ad66cf561775cebc66/examples/rp/src/bin/flash.rs#L34
     let board_id = embassy_rp::otp::get_chipid().unwrap();
     info!("board id: {=u64:#X}", board_id);
