@@ -91,14 +91,11 @@ async fn main(spawner: Spawner) {
     let mut bme = bme280::Bme280::new_with_address(i2c, DEFAULT_ADDRESS).await.unwrap();
     info!("initialized BME280 sensor: {}", bme);
 
-    let hum_ctrl = bme.ctrl_hum().await.unwrap();
-    info!("humidity control: {}", hum_ctrl);
+    let bme_control = bme.control().await.unwrap();
+    info!("BME280 control: {}", bme_control);
 
-    let meas_ctrl = bme.ctrl_meas().await.unwrap();
-    info!("measure control: {}", meas_ctrl);
-
-    let config = bme.config().await.unwrap();
-    info!("config: {}", config);
+    let bme_config = bme.config().await.unwrap();
+    info!("BME280 config: {}", bme_config);
 
     // RP2040 would be embassy_rp::flash::blocking_unique_id(), see https://github.com/embassy-rs/embassy/blob/572e788b2e878436bde527ad66cf561775cebc66/examples/rp/src/bin/flash.rs#L34
     let board_id = embassy_rp::otp::get_chipid().unwrap();
