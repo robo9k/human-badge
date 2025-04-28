@@ -111,14 +111,69 @@ async fn main(spawner: Spawner) {
     let bme_config = bme.config().await.unwrap();
     info!("BME280 config: {}", bme_config);
 
-    let bme = bme.calibrate().await.unwrap();
+    let mut bme = bme.calibrate().await.unwrap();
     info!("calibrated BME280 sensor: {}", bme);
+
+    let delay = Duration::from_secs(1);
+
+    let bme_measurement = bme.measure().await.unwrap();
+    info!("BME280 measurement #1: {}", bme_measurement);
+    Timer::after(delay).await;
+
+    let bme_measurement = bme.measure().await.unwrap();
+    info!("BME280 measurement #2: {}", bme_measurement);
+    Timer::after(delay).await;
+
+    let bme_measurement = bme.measure().await.unwrap();
+    info!("BME280 measurement #3: {}", bme_measurement);
+    Timer::after(delay).await;
+
+    let bme_control = bme280::Control {
+        humidity_oversampling: bme280::HumidityOversampling::Skip,
+        temperature_oversampling: bme280::TemperatureOversampling::Skip,
+        pressure_oversampling: bme280::PressureOversampling::Skip,
+        mode: bme280::Mode::Normal,
+    };
+    bme.set_control(bme_control).await.unwrap();
+    info!("skipping all BME280 measurements");
+
+    let bme_measurement = bme.measure().await.unwrap();
+    info!("BME280 measurement #4: {}", bme_measurement);
+    Timer::after(delay).await;
+
+    let bme_measurement = bme.measure().await.unwrap();
+    info!("BME280 measurement #5: {}", bme_measurement);
+    Timer::after(delay).await;
+
+    let bme_measurement = bme.measure().await.unwrap();
+    info!("BME280 measurement #6: {}", bme_measurement);
+    Timer::after(delay).await;
+
+    let bme_control = bme280::Control {
+        humidity_oversampling: bme280::HumidityOversampling::Skip,
+        temperature_oversampling: bme280::TemperatureOversampling::X16,
+        pressure_oversampling: bme280::PressureOversampling::Skip,
+        mode: bme280::Mode::Normal,
+    };
+    bme.set_control(bme_control).await.unwrap();
+    info!("measuring BME280 temperature x16 only");
+
+    let bme_measurement = bme.measure().await.unwrap();
+    info!("BME280 measurement #7: {}", bme_measurement);
+    Timer::after(delay).await;
+
+    let bme_measurement = bme.measure().await.unwrap();
+    info!("BME280 measurement #8: {}", bme_measurement);
+    Timer::after(delay).await;
+
+    let bme_measurement = bme.measure().await.unwrap();
+    info!("BME280 measurement #9: {}", bme_measurement);
+    Timer::after(delay).await;
 
     // RP2040 would be embassy_rp::flash::blocking_unique_id(), see https://github.com/embassy-rs/embassy/blob/572e788b2e878436bde527ad66cf561775cebc66/examples/rp/src/bin/flash.rs#L34
     let board_id = embassy_rp::otp::get_chipid().unwrap();
     info!("board id: {=u64:#X}", board_id);
 
-    let delay = Duration::from_secs(1);
     loop {
         info!("led on!");
         control.gpio_set(0, true).await;
