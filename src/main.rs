@@ -88,33 +88,32 @@ async fn main(spawner: Spawner) {
 
     const DEFAULT_ADDRESS: u8 = 0x76;
 
-    let mut bme = bme280::Bme280::new_with_address(i2c, DEFAULT_ADDRESS).await.unwrap();
+    let bme = bme280::Bme280::new_with_address(i2c, DEFAULT_ADDRESS).await.unwrap();
     info!("initialized BME280 sensor: {}", bme);
 
-    let bme_control = bme.control().await.unwrap();
-    info!("BME280 control before: {}", bme_control);
+    let delay = Duration::from_secs(1);
 
-    let bme_control = bme280::Control {
-        humidity_oversampling: bme280::HumidityOversampling::X1,
-        temperature_oversampling: bme280::TemperatureOversampling::X1,
-        pressure_oversampling: bme280::PressureOversampling::X1,
-        mode: bme280::Mode::Normal,
-    };
-    bme.set_control(bme_control).await.unwrap();
-
-    let bme_status = bme.status().await.unwrap();
-    info!("BME280 status: {}", bme_status);
-
-    let bme_control = bme.control().await.unwrap();
-    info!("BME280 control after: {}", bme_control);
-
-    let bme_config = bme.config().await.unwrap();
-    info!("BME280 config: {}", bme_config);
+    Timer::after(delay).await;
 
     let mut bme = bme.calibrate().await.unwrap();
     info!("calibrated BME280 sensor: {}", bme);
 
-    let delay = Duration::from_secs(1);
+    let bme_control = bme280::Control {
+        humidity_oversampling: bme280::HumidityOversampling::Skip,
+        temperature_oversampling: bme280::TemperatureOversampling::X1,
+        pressure_oversampling: bme280::PressureOversampling::Skip,
+        mode: bme280::Mode::Forced,
+    };
+    bme.set_control(bme_control).await.unwrap();
+    info!("set BME280 control");
+
+    let bme_status = bme.status().await.unwrap();
+    info!("BME280 status: {}", bme_status);
+
+    Timer::after(delay).await;
+
+    let bme_status = bme.status().await.unwrap();
+    info!("BME280 status: {}", bme_status);
 
     let bme_measurement = bme.measure().await.unwrap();
     info!("BME280 measurement #1: {}", bme_measurement);
@@ -128,47 +127,8 @@ async fn main(spawner: Spawner) {
     info!("BME280 measurement #3: {}", bme_measurement);
     Timer::after(delay).await;
 
-    let bme_control = bme280::Control {
-        humidity_oversampling: bme280::HumidityOversampling::Skip,
-        temperature_oversampling: bme280::TemperatureOversampling::Skip,
-        pressure_oversampling: bme280::PressureOversampling::Skip,
-        mode: bme280::Mode::Normal,
-    };
-    bme.set_control(bme_control).await.unwrap();
-    info!("skipping all BME280 measurements");
-
-    let bme_measurement = bme.measure().await.unwrap();
-    info!("BME280 measurement #4: {}", bme_measurement);
-    Timer::after(delay).await;
-
-    let bme_measurement = bme.measure().await.unwrap();
-    info!("BME280 measurement #5: {}", bme_measurement);
-    Timer::after(delay).await;
-
-    let bme_measurement = bme.measure().await.unwrap();
-    info!("BME280 measurement #6: {}", bme_measurement);
-    Timer::after(delay).await;
-
-    let bme_control = bme280::Control {
-        humidity_oversampling: bme280::HumidityOversampling::Skip,
-        temperature_oversampling: bme280::TemperatureOversampling::X16,
-        pressure_oversampling: bme280::PressureOversampling::Skip,
-        mode: bme280::Mode::Normal,
-    };
-    bme.set_control(bme_control).await.unwrap();
-    info!("measuring BME280 temperature x16 only");
-
-    let bme_measurement = bme.measure().await.unwrap();
-    info!("BME280 measurement #7: {}", bme_measurement);
-    Timer::after(delay).await;
-
-    let bme_measurement = bme.measure().await.unwrap();
-    info!("BME280 measurement #8: {}", bme_measurement);
-    Timer::after(delay).await;
-
-    let bme_measurement = bme.measure().await.unwrap();
-    info!("BME280 measurement #9: {}", bme_measurement);
-    Timer::after(delay).await;
+    let bme_status = bme.status().await.unwrap();
+    info!("BME280 status: {}", bme_status);
 
     // RP2040 would be embassy_rp::flash::blocking_unique_id(), see https://github.com/embassy-rs/embassy/blob/572e788b2e878436bde527ad66cf561775cebc66/examples/rp/src/bin/flash.rs#L34
     let board_id = embassy_rp::otp::get_chipid().unwrap();
