@@ -56,8 +56,7 @@ portable-atomic = { version = "1.5", features = ["critical-section"] }
 log = "0.4"
 rand = { version = "0.8.5", default-features = false }
 embedded-sdmmc = "0.7.0"
-
-bme280 = { version = "0.1.0", path = "../bme280-driver", features = ["defmt-03",]}
+bme280 = { version = "0.5.1", features = ["async", "defmt", "with_defmt"] }
 
 [profile.release]
 debug = 2

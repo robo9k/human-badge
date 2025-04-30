@@ -88,47 +88,16 @@ async fn main(spawner: Spawner) {
 
     const DEFAULT_ADDRESS: u8 = 0x76;
 
-    let bme = bme280::Bme280::new_with_address(i2c, DEFAULT_ADDRESS).await.unwrap();
-    info!("initialized BME280 sensor: {}", bme);
+    let mut delay = embassy_time::Delay;
+
+    let mut bme = bme280::i2c::AsyncBME280::new(i2c, DEFAULT_ADDRESS);
+
+    bme.init(&mut delay).await.unwrap();
+
+    let measurement = bme.measure(&mut delay).await.unwrap();
+    info!("measurement: {}", measurement);
 
     let delay = Duration::from_secs(1);
-
-    Timer::after(delay).await;
-
-    let mut bme = bme.calibrate().await.unwrap();
-    info!("calibrated BME280 sensor: {}", bme);
-
-    let bme_control = bme280::Control {
-        humidity_oversampling: bme280::HumidityOversampling::Skip,
-        temperature_oversampling: bme280::TemperatureOversampling::X1,
-        pressure_oversampling: bme280::PressureOversampling::Skip,
-        mode: bme280::Mode::Forced,
-    };
-    bme.set_control(bme_control).await.unwrap();
-    info!("set BME280 control");
-
-    let bme_status = bme.status().await.unwrap();
-    info!("BME280 status: {}", bme_status);
-
-    Timer::after(delay).await;
-
-    let bme_status = bme.status().await.unwrap();
-    info!("BME280 status: {}", bme_status);
-
-    let bme_measurement = bme.measure().await.unwrap();
-    info!("BME280 measurement #1: {}", bme_measurement);
-    Timer::after(delay).await;
-
-    let bme_measurement = bme.measure().await.unwrap();
-    info!("BME280 measurement #2: {}", bme_measurement);
-    Timer::after(delay).await;
-
-    let bme_measurement = bme.measure().await.unwrap();
-    info!("BME280 measurement #3: {}", bme_measurement);
-    Timer::after(delay).await;
-
-    let bme_status = bme.status().await.unwrap();
-    info!("BME280 status: {}", bme_status);
 
     // RP2040 would be embassy_rp::flash::blocking_unique_id(), see https://github.com/embassy-rs/embassy/blob/572e788b2e878436bde527ad66cf561775cebc66/examples/rp/src/bin/flash.rs#L34
     let board_id = embassy_rp::otp::get_chipid().unwrap();
