@@ -154,6 +154,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "bmpe280"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "00781191d87ba3fac35d11d04c6a0d6156f91e393b81aa7331650aa24a6fdd46"
+dependencies = [
+ "embedded-hal 1.0.0",
+]
+
+[[package]]
 name = "bt-hci"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1066,6 +1075,7 @@ version = "0.1.0"
 dependencies = [
  "assign-resources",
  "bme280",
+ "bmpe280",
  "byte-slice-cast",
  "cortex-m",
  "cortex-m-rt",
