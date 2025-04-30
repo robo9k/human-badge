@@ -1,5 +1,5 @@
 [toolchain]
-channel = "1.86.0"
+channel = "nightly"
 components = [ "rust-src", "rustfmt", "llvm-tools" ]
 targets = [
     "thumbv8m.main-none-eabihf",

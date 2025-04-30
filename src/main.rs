@@ -88,54 +88,29 @@ async fn main(spawner: Spawner) {
 
     const DEFAULT_ADDRESS: u8 = 0x76;
 
-    let bme = bme280::Bme280::new_with_address(i2c, DEFAULT_ADDRESS).await.unwrap();
-    info!("initialized BME280 sensor: {}", bme);
+    use embedded_devices::devices::bosch::bme280::{BME280Async, Configuration, address::Address};
+    use embedded_devices::devices::bosch::bme280::registers::{IIRFilter, Oversampling};
+    use uom::si::thermodynamic_temperature::degree_celsius;
+    use uom::num_traits::ToPrimitive;
+
+    let mut delay = embassy_time::Delay;
+
+    // Create and initialize the device
+    let mut bme280 = BME280Async::new_i2c(i2c, Address::Custom(DEFAULT_ADDRESS));
+    bme280.init(&mut delay).await.unwrap();
+    bme280.configure(Configuration {
+        temperature_oversampling: Oversampling::X_16,
+        pressure_oversampling: Oversampling::X_16,
+        humidity_oversampling: Oversampling::X_16,
+        iir_filter: IIRFilter::Disabled,
+    }).await.unwrap();
+
+    // Read the current temperature in °C and convert it to a float
+    let measurements = bme280.measure(&mut delay).await.unwrap();
+    let temp = measurements.temperature.get::<degree_celsius>().to_f32();
+    println!("Current temperature: {:?}°C", temp);
 
     let delay = Duration::from_secs(1);
-
-    Timer::after(delay).await;
-
-    let mut bme = bme.calibrate().await.unwrap();
-    info!("calibrated BME280 sensor: {}", bme);
-
-    let bme_config = bme280::Config {
-        standby_time: Default::default(),
-        filter: bme280::Filter::X16,
-    };
-    bme.set_config(bme_config).await.unwrap();
-    info!("set BME280 config");
-
-    let bme_control = bme280::Control {
-        humidity_oversampling: bme280::HumidityOversampling::Skip,
-        temperature_oversampling: bme280::TemperatureOversampling::X2,
-        pressure_oversampling: bme280::PressureOversampling::Skip,
-        mode: bme280::Mode::Forced,
-    };
-    bme.set_control(bme_control).await.unwrap();
-    info!("set BME280 control");
-
-    let bme_status = bme.status().await.unwrap();
-    info!("BME280 status: {}", bme_status);
-
-    Timer::after(delay).await;
-
-    let bme_status = bme.status().await.unwrap();
-    info!("BME280 status: {}", bme_status);
-
-    let bme_measurement = bme.measure().await.unwrap();
-    info!("BME280 measurement #1: {}", bme_measurement);
-    Timer::after(delay).await;
-
-    let bme_measurement = bme.measure().await.unwrap();
-    info!("BME280 measurement #2: {}", bme_measurement);
-    Timer::after(delay).await;
-
-    let bme_measurement = bme.measure().await.unwrap();
-    info!("BME280 measurement #3: {}", bme_measurement);
-    Timer::after(delay).await;
-
-    let bme_status = bme.status().await.unwrap();
-    info!("BME280 status: {}", bme_status);
 
     // RP2040 would be embassy_rp::flash::blocking_unique_id(), see https://github.com/embassy-rs/embassy/blob/572e788b2e878436bde527ad66cf561775cebc66/examples/rp/src/bin/flash.rs#L34
     let board_id = embassy_rp::otp::get_chipid().unwrap();
