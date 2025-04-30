@@ -98,9 +98,16 @@ async fn main(spawner: Spawner) {
     let mut bme = bme.calibrate().await.unwrap();
     info!("calibrated BME280 sensor: {}", bme);
 
+    let bme_config = bme280::Config {
+        standby_time: Default::default(),
+        filter: bme280::Filter::X16,
+    };
+    bme.set_config(bme_config).await.unwrap();
+    info!("set BME280 config");
+
     let bme_control = bme280::Control {
         humidity_oversampling: bme280::HumidityOversampling::Skip,
-        temperature_oversampling: bme280::TemperatureOversampling::X1,
+        temperature_oversampling: bme280::TemperatureOversampling::X2,
         pressure_oversampling: bme280::PressureOversampling::Skip,
         mode: bme280::Mode::Forced,
     };
