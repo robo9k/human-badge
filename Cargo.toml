@@ -58,6 +58,7 @@ rand = { version = "0.8.5", default-features = false }
 embedded-sdmmc = "0.7.0"
 
 bme280 = { version = "0.1.0", path = "../bme280-driver", features = ["defmt-03",]}
+embedded-drivers = { version = "0.0.2", features = ["defmt"] }
 
 [profile.release]
 debug = 2
